@@ -1,19 +1,79 @@
-#include <SDL3/SDL_video.h>
 #define SDL_MAIN_USE_CALLBACKS 1
-#define SDL_WINDOW_WDITH 80U
-#define SDL_WINDOW_HEIGHT 25U
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_video.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 640
+#define PIXEL 32
+#define PIXEL_P_WIDTH SCREEN_WIDTH / PIXEL
+#define PIXEL_P_HEIGHT SCREEN_HEIGHT / PIXEL
 
 typedef struct {
   SDL_Window *window;
   SDL_Renderer *renderer;
   uint64_t last_step;
 } AppState;
+
+typedef struct {
+  int grid[PIXEL_P_HEIGHT][PIXEL_P_WIDTH];
+} Map;
+
+void map_init(Map *map) {
+  for (int y = 0; y < PIXEL_P_HEIGHT; y++) {
+    for (int x = 0; x < PIXEL_P_WIDTH; x++) {
+      map->grid[y][x] = 0;
+    }
+  }
+}
+
+int load_map_from_csv(const char *filename, Map *map) {
+  FILE *file = fopen(filename, "r");
+  if (!file) {
+    perror("Could not open file");
+    return 0;
+  }
+
+  char line[512]; // Increase buffer for wide maps
+  int y = 0;
+
+  while (fgets(line, sizeof(line), file) && y < PIXEL_P_HEIGHT) {
+    int x = 0;
+    char *token = strtok(line, ",");
+
+    while (token && x < PIXEL_P_WIDTH) {
+      map->grid[y][x] = atoi(token);
+      token = strtok(NULL, ",");
+      x++;
+    }
+
+    y++;
+  }
+
+  fclose(file);
+  return 1;
+}
+
+void draw_map(Map *map, SDL_Renderer *renderer) {
+  for (int y = 0; y < PIXEL_P_HEIGHT; y++) {
+    for (int x = 0; x < PIXEL_P_WIDTH; x++) {
+      if (map->grid[y][x] == 1) {
+        SDL_SetRenderDrawColor(renderer, 255, 25, 25, 255); // RED
+        SDL_FRect square = {x * PIXEL, y * PIXEL, PIXEL,
+                            PIXEL}; // x, y, width, height
+        SDL_RenderFillRect(renderer, &square);
+      }
+    }
+  }
+}
 
 int LoadAndSetBMP(SDL_Window *window) {
   SDL_Surface *icon = SDL_LoadBMP("radiation.bmp");
@@ -42,8 +102,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   *appstate = as;
 
   // Create the window and the renderer
-  if (!SDL_CreateWindowAndRenderer("Day Zero", 640, 480, 0, &as->window,
-                                   &as->renderer)) {
+  if (!SDL_CreateWindowAndRenderer("Day Zero", SCREEN_WIDTH, SCREEN_HEIGHT, 0,
+                                   &as->window, &as->renderer)) {
     SDL_Log("Couldn't initialize Window or Renderer: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
@@ -52,9 +112,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   as->last_step = SDL_GetTicks();
   LoadAndSetBMP(as->window);
 
-  // Clear the screen and fill it with the color #262626
-  SDL_SetRenderDrawColor(as->renderer, 25, 25, 25, 255);
-  SDL_RenderClear(as->renderer);
+  Map map;
+  map_init(&map);
+  load_map_from_csv("map.csv", &map);
+  draw_map(&map, as->renderer);
+  printf("%d", PIXEL_P_HEIGHT);
+  printf("%d", PIXEL_P_WIDTH);
   SDL_RenderPresent(as->renderer);
   return SDL_APP_CONTINUE;
 }
