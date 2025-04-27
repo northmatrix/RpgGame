@@ -1,5 +1,5 @@
 #ifndef INCLUDE_CAMERA
-
+#define INCLUDE_CAMERA
 #include <SDL3/SDL.h>
 
 typedef struct {

@@ -2,6 +2,7 @@
 #include "constants.h"
 #include "level.h"
 #include "util.h"
+#include <stdlib.h>
 
 AppState *AppState_Init() {
   // initialized SDL VIDEO
@@ -22,10 +23,18 @@ AppState *AppState_Init() {
   }
   set_icon(as->window);
   // Set the last_step and load the window Icon
-  as->last_step = SDL_GetTicks();
+  as->lastTick = SDL_GetTicks();
   as->rows = 0;
   as->cols = 0;
   as->map = load_csv("map.csv", &as->rows, &as->cols);
   as->camera = init_camera(as->cols, as->rows);
   return as;
+}
+
+void AppState_Free(AppState *as) {
+  free(as->camera);
+  for (int i = 0; i < as->rows; i++) {
+    free(as->map[i]);
+  }
+  free(as->map);
 }
