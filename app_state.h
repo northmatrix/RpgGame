@@ -4,6 +4,10 @@
 #include <SDL3/SDL.h>
 
 typedef struct {
+  int up, down, left, right;
+} KeyState;
+
+typedef struct {
   SDL_Window *window;
   SDL_Renderer *renderer;
   int **map;
@@ -14,6 +18,7 @@ typedef struct {
   float deltaTime;
   float player_x;
   float player_y;
+  KeyState key_state;
 } AppState;
 
 AppState *AppState_Init(void);

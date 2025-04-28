@@ -28,6 +28,12 @@ AppState *AppState_Init() {
   as->cols = 0;
   as->map = load_csv("map.csv", &as->rows, &as->cols);
   as->camera = init_camera(as->cols, as->rows);
+  KeyState key_state;
+  key_state.down = 0;
+  key_state.left = 0;
+  key_state.right = 0;
+  key_state.up = 0;
+  as->key_state = key_state;
   return as;
 }
 

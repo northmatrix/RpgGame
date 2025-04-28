@@ -29,9 +29,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     as->deltaTime = 0.016f; // 60 FPS (approximately)
   }
   as->lastTick = currenttick;
-  SDL_Log("%f", as->deltaTime);
   SDL_SetRenderDrawColor(as->renderer, 25, 25, 25, 255);
   SDL_RenderClear(as->renderer);
+  handle_key_event(as->camera, as->deltaTime, as->map, &as->key_state);
   draw_world(as->camera, as->renderer, as->map);
   SDL_RenderPresent(as->renderer);
   return SDL_APP_CONTINUE;
@@ -43,8 +43,11 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
   case SDL_EVENT_KEY_DOWN:
-    return handle_key_event(as->camera, as->deltaTime, as->map,
-                            event->key.scancode);
+    update_key_state(&as->key_state, event->key.scancode, 1);
+    break;
+  case SDL_EVENT_KEY_UP:
+    update_key_state(&as->key_state, event->key.scancode, 0);
+    break;
   }
   return SDL_APP_CONTINUE;
 }
