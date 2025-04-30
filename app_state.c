@@ -2,6 +2,9 @@
 #include "constants.h"
 #include "level.h"
 #include "util.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_error.h>
+#include <SDL3_image/SDL_image.h>
 #include <stdlib.h>
 
 AppState *AppState_Init() {
@@ -19,6 +22,12 @@ AppState *AppState_Init() {
   if (!SDL_CreateWindowAndRenderer("Day Zero", SCREEN_WIDTH, SCREEN_HEIGHT, 0,
                                    &as->window, &as->renderer)) {
     SDL_Log("Couldn't initialize Window or Renderer: %s", SDL_GetError());
+    return NULL;
+  }
+  // load texture atlas
+  SDL_Texture *atlasTexture = IMG_LoadTexture(as->renderer, "atlas.png");
+  if (atlasTexture == NULL) {
+    SDL_Log("Failed to load texture! SDL_image Error: %s\n", SDL_GetError());
     return NULL;
   }
   set_icon(as->window);
